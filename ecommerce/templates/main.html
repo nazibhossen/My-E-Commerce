@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="{% static 'images/icon.png' %}" type="image/x-icon" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <title>GadGetFit</title>
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+
+  <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <script type="text/javascript">
+    var user = '{{request.user}}'
+
+    function getToken(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    var csrftoken = getToken('csrftoken');
+
+    function getCookie(name) {
+      var cookieArr = document.cookie.split(";");
+
+      for (var i = 0; i < cookieArr.length; i++) {
+        var cookiePair = cookieArr[i].split("=");
+
+        if (name == cookiePair[0].trim()) {
+          return decodeURIComponent(cookiePair[1]);
+        }
+      }
+      return null;
+    }
+
+    var cart = JSON.parse(getCookie('cart'))
+    if (cart == undefined) {
+      cart = {}
+      console.log('Cart was created!')
+      document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
+    }
+
+    console.log('Cart:', cart)
+  </script>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <a href="{% url 'store' %}">
+      <img class="logo my-hover" id="logo-icon" src="{% static 'images/logo.png' %}" alt="Logo">
+    </a>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <div class="mx-auto">
+        {% if request.path == '/' or request.path == '/search/'  %}
+        <form class="form-inline my-2 my-lg-0" action="{% url 'search' %}" role="search" method="GET">
+          {% csrf_token %}
+          <input class="form-control mr-sm-2 custom-search" type="search" placeholder="Search..." aria-label="Search"
+            name="search" id="search">
+          <button class="btn btn-outline-light" type="button">Search</button>
+        </form>
+        {% endif %}
+      </div>
+
+    </div>
+    <div class="form-inline my-2 my-lg-0">
+      {% if user.is_authenticated %}
+      <a href="{% url 'logout' %}" class="btn btn-light">Logout</a>
+      {% else %}
+      <a href="#" class="btn btn-light mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal">SignUp/Login</a>
+      {% endif %}
+      <a href="{% url 'cart' %}">
+        <img id="cart-icon" src="{% static 'images/cart.png' %}">
+      </a>
+      <p id="cart-total">{{cartItems}}</p>
+    </div>
+    </div>
+  </nav>
+  <!--Signup Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-1" id="modalTitle">Login</h1>
+        </div>
+        <div class="modal-body">
+          <!-- Login form -->
+          <form id="signin-form" method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="username" class="form-label">User Name</label>
+              <input type="username" class="form-control" name="username" id="username" />
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" name="password" id="password" />
+            </div>
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary btn-lg" type="submit">Login</button>
+              <p>Don't have an account? <a href="#" id="signup-link">Sign Up</a></p>
+            </div>
+          </form>
+
+          <!-- Registration form -->
+          <form id="signup-form" style="display: none;" method="POST" action="{% url 'registration' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="name" class="form-label">Name</label>
+              <input type="text" class="form-control" id="name" name="name" />
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control" id="username" name="username" />
+              <label for="signupEmail" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="signupEmail" name="email" aria-describedby="emailHelp" />
+              <label for="password1" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password1" name="password1" />
+              <label for="password2" class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" id="password2" name="password2" />
+            </div>
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary btn-lg" type="submit">Sign Up</button>
+              <p>Already have an account? <a href="#" id="signin-link">Sign In</a></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% if messages %}
+  <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content rounded-pill">
+        <div class="modal-body">
+          {% for message in messages %}
+          <div>
+            <h4 style="text-align: center;">{{ message }}
+              <h4 />
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+
+  <br>
+  <div class="container">
+    {% block content %} {% endblock content %}
+    <br>
+    <div id="wrapper">
+      {% if request.path == '/' %}
+      <ul id="pagination">
+        <li><a class="" href="#">«</a></li>
+        <li><a href="#" class="active">1</a></li>
+        <li><a href="#">2</a></li>
+        <li><a href="#">3</a></li>
+        <li><a href="#">4</a></li>
+        <li><a href="#">5</a></li>
+        <li><a href="#">»</a></li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+  
+
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
+
+  <script type="text/javascript" src="{% static 'js/cart.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+    integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+    integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+  <script>
+    document.getElementById("signup-link").addEventListener("click", function () {
+      document.getElementById("signin-form").style.display = "none";
+      document.getElementById("signup-form").style.display = "block";
+      document.getElementById("modalTitle").textContent = "Sign Up";
+    });
+
+    document.getElementById("signin-link").addEventListener("click", function () {
+      document.getElementById("signin-form").style.display = "block";
+      document.getElementById("signup-form").style.display = "none";
+      document.getElementById("modalTitle").textContent = "Sign In";
+    });
+  </script>
+
+  <script>
+    $(document).ready(function () {
+      $('#messageModal').modal('show');
+    });
+  </script>
+
+</body>
+<footer class="footer-distributed">
+  <div class="footer-left">
+    <!-- Company Logo -->
+    <p class="footer-links">
+      <a href="#" class="link-1">Home</a>
+      <a href="#">Blog</a>
+      <a href="#">Pricing</a>
+      <a href="#">About</a>
+      <a href="#">Faq</a>
+      <a href="#">Contact</a>
+    </p>
+    <p class="footer-company-name">GadGetFit© 2023</p>
+  </div>
+  <div class="footer-center">
+    <div>
+      <i class="fa fa-map-marker"></i>
+      <p><span>444 S. Cedros Ave</span> Solana Beach, California</p>
+    </div>
+    <div>
+      <i class="fa fa-phone"></i>
+      <p>+1.555.555.5555</p>
+    </div>
+    <div>
+      <i class="fa fa-envelope"></i>
+      <p><a href="mailto:support@company.com">support@gadgetfit.com</a></p>
+    </div>
+  </div>
+  <div class="footer-right">
+    <p class="footer-company-about">
+      <span>About the company</span>
+      GadGetFit is a One-Stop Tech Shop that offers Tech Enthusiasts authentic Smartphones, Gadgets & Accessories from
+      renowned brands so they can have first-hand experience with the real thing.
+    </p>
+  </div>
+</footer>
+
+</html>
